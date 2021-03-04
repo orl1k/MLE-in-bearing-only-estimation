@@ -92,7 +92,7 @@ class Ship():
     def forward_movement(self, time):
         for i in range(time):
             self.update_position()
-        print('Корабль-{} движется прямо по курсу {:.1f}° {}с'.format(self.name,
+        print('{} движется прямо по курсу {:.1f}° {}с'.format(self.name,
                                                                       np.degrees(self.get_course()), time))
 
     def update_position(self):
@@ -128,5 +128,5 @@ class Ship():
             time += 1
             self.update_velocity(teta)
             self.update_position()
-        print('Корабль-{} перешёл на курс {:.1f}° за {}с'.format(self.name,
+        print('{} перешёл на курс {:.1f}° за {}с'.format(self.name,
                                                                  np.degrees(self.get_course()), time))

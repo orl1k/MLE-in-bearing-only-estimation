@@ -9,14 +9,14 @@ tests = Tests('1')
 
 # Пример моделирования
 
-# Создаем корабль-наблюдатель
+# Создаем наблюдатель
 observer_x, observer_y, observer_course, observer_velocity = 0, 0, 0, 3
-observer = Ship('наблюдатель', observer_x, observer_y, observer_course,
+observer = Ship('Наблюдатель', observer_x, observer_y, observer_course,
                 observer_velocity)
-# Создаем корабль-объект
+# Создаем объект
 
 target_bearing, target_distance, target_course, target_velocity = 0, 20, 45, 10
-target = Ship('объект', target_bearing, target_distance, target_course,
+target = Ship('Объект', target_bearing, target_distance, target_course,
               target_velocity, observer, mode='bdcv')
 # Моделирование траекторий
 observer.forward_movement(3 * 60)
@@ -33,16 +33,14 @@ target.forward_movement(len(observer.coords[0])-1)
 # target.change_course(270, 'left', omega=0.5)
 # target.forward_movement(360)
 
+tma = TMA(observer, target, sd = np.radians(0.3))
 
-tma = TMA(observer, target, sd = np.radians(0.1))
+print(tma.mle_algorithm_v4([1, 1, 1, 1]))
 
-start_time = time.time()
-# print(tma.mle_algorithm_v4([1, 1, 1, 1]))
 # tma.n_bearings_algorithm(tma.bearings_with_noise[0])
 
 # r = tma.swarm(100)
 # tests.save_results(r)
-print("Время работы алгоритма: %s секунд" % (time.time() - start_time))
 
 # # Запуск множества моделей
 # r = tma.swarm(100)
