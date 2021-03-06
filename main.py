@@ -5,6 +5,7 @@ from botma import TMA
 import lm
 import time
 
+# Класс для сохранения результатов
 tests = Tests('1')
 
 # Пример моделирования
@@ -14,12 +15,11 @@ observer_x, observer_y, observer_course, observer_velocity = 0, 0, 0, 3
 observer = Ship('Наблюдатель', observer_x, observer_y, observer_course,
                 observer_velocity)
 # Создаем объект
-
 target_bearing, target_distance, target_course, target_velocity = 0, 20, 45, 10
 target = Ship('Объект', target_bearing, target_distance, target_course,
               target_velocity, observer, mode='bdcv')
-# Моделирование траекторий
 
+# Моделирование траекторий
 observer.forward_movement(3 * 60)
 observer.change_course(270, 'left', omega=0.5)
 observer.forward_movement(2 * 60)
@@ -34,10 +34,7 @@ target.forward_movement(len(observer.coords[0])-1)
 # target.change_course(270, 'left', omega=0.5)
 # target.forward_movement(360)
 
-tma = TMA(observer, target, sd=np.radians(1), seed=1)
-
-# z = np.append(tma.observer_coords, np.arange(0, len(observer.coords[0])))
-# z=z.reshape(3, len(observer.coords[0]))
+tma = TMA(observer, target, sd=np.radians(1))
 
 # print(tma.mle_algorithm_v5([1, 1, 1, 1]))
 

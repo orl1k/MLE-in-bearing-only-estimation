@@ -137,7 +137,7 @@ class TMA(Ship):
                 except(IndexError):
                     bearing_array.append(bearing)
                     print(
-                        'Корабли находятся слишком близко друг к другу в начальный момент времени')
+                        'Объекты находятся слишком близко друг к другу в начальный момент времени')
             else:
                 bearing_array.append(bearing)
         self.bearings = np.array(bearing_array)
@@ -253,7 +253,7 @@ class TMA(Ship):
         res[2], res[3] = Ship.convert_to_polar(res[2], res[3])
         self.last_result = res.copy()
 
-        stop_time = start_time = time.perf_counter()
+        stop_time = time.perf_counter()
         return self.get_result(algorithm_name, res.copy(), [0, 0, 0, 0], [0], [0, 0, 0, 0], stop_time - start_time)
 
     def plot_trajectories(self):
