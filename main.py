@@ -42,10 +42,11 @@ tma = TMA(observer, target, sd=np.radians(1))
 # [b, d, c, v] = p0
 # p0 = [d * np.cos(b), d * np.sin(b), v * np.cos(c), v * np.sin(c)]
 
-# print(tma.mle_algorithm_v5(p0))
+p0 = [1, 1, 1, 1]
+print(tma.mle_algorithm_v5(p0))
 
-r = tma.swarm(10)
-tests.save_results(r)
+# r = tma.swarm(10)
+# tests.save_results(r)
 
 # # Запуск множества моделей
 # r = tma.swarm(100)
