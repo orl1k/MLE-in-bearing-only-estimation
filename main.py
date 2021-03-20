@@ -34,6 +34,7 @@ target.forward_movement(len(observer.coords[0])-1)
 
 tma = TMA(observer, target, sd=np.radians(0.5), seed=1)
 tma.print_verbose()
+dict_results = tma.swarm(n=100, seeded=True, fixed_target=False, fixed_noise=False, p0=[0., 20., 45., 10.])
 
 # tma.set_target(p0=tma.get_random_p0())
 # p0 = tma.get_random_p0(seed = 692 + 1000)

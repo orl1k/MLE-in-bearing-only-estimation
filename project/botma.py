@@ -391,7 +391,10 @@ class TMA(Ship):
         for i in range(n):
             
             if not fixed_target:
-                self.set_target(p0=p0_func(seed=i+100000))
+                if seeded:
+                    self.set_target(p0=p0_func(seed=i))
+                else:
+                    self.set_target(p0=p0_func())
 
             if not fixed_p0:
                 if seeded:
