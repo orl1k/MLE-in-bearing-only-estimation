@@ -1,8 +1,8 @@
 import numpy as np
-from ship import Ship
+from project.ship import Ship
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-import lm
+import project.lm
 import time
 
 

@@ -1,8 +1,8 @@
 import gym
 from gym import spaces
-from botma import TMA
+from project.botma import TMA
 import numpy as np
-from ship import Ship
+from project.ship import Ship
 
 class CustomGym(gym.Env):
     def __init__(self, observer):
