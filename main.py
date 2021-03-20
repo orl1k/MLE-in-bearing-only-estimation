@@ -34,8 +34,9 @@ target.forward_movement(len(observer.coords[0])-1)
 
 tma = TMA(observer, target=target, sd=np.radians(0.1))
 tma.print_verbose()
-dict_results = tma.swarm(algorithm_name='Метод N пеленгов',n=100, seeded=True)
+dict_results = tma.swarm(algorithm_name='Метод N пеленгов',n=10, seeded=True)
 df = tests.get_df(dict_results)
+
 
 # dict_results = tma.swarm(n=10, seeded=True, fixed_target=False, fixed_noise=False, p0=[0., 20., 45., 10.])
 
