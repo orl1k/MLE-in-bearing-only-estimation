@@ -242,7 +242,10 @@ class TMA(Ship):
         res = lev_mar(self._xy_func2, self.observer_data,
                     self.bearings_with_noise[self.time], p0, verbose=verbose, jac=self._xy_func2_jac, std=self.standart_deviation)
         stop_time = time.perf_counter()
-        perr = np.sqrt(np.diag(res[1]))
+        try:
+            perr = np.sqrt(np.diag(res[1]))
+        except(RuntimeWarning):
+            print(res[1])
         return self.get_result(algorithm_name, res[0].copy(), perr, res[2], p0, stop_time - start_time)
 
     def n_bearings_algorithm(self):
@@ -278,7 +281,7 @@ class TMA(Ship):
         print('П0 = {}, Д0 = {} км, К = {}, V = {} м/c'.format(*self.target.get_params()))
         print('СКОп = {}, '.format(np.degrees(self.standart_deviation)) + 'tau = {}'.format(self.tau))
         print('Предельно допустимые значения ошибок КПДО:')
-        print('- 1градус по пеленгу,')
+        print('- 1 градус по пеленгу,')
         print('- 15%Д по дальности,')
         print('- 10 градусов по курсу,')
         print('- 10% по скорости.')
