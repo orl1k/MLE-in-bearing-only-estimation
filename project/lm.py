@@ -42,10 +42,6 @@ def lev_mar(f, x_data, y_data, par, std=None, sigma=None, verbose=False, jac=Non
                 if (verbose):
                     print('it = {},   lambda = {:.2e}, err = {:.4f}, par = {}, std = {}'.format(
                     i, lam, err, _format_par(par), np.degrees(np.sqrt(err / len(y_data)))))
-                    # print('hessian = ')
-                    # print(H)
-                    # print('hessian + lambda*diag(hessian) = ')
-                    # print(A)
 
                 L, low = cho_factor(A)
                 delta_par = cho_solve((L, low), b)
@@ -89,7 +85,7 @@ def lev_mar(f, x_data, y_data, par, std=None, sigma=None, verbose=False, jac=Non
     if std is None:
         return par, np.linalg.inv(H) * err / (len(y_data) - len(par)), [nf, i]
     else:
-        return par, np.linalg.inv(H / (std ** 2)), [nf, i]
+        return par, np.linalg.inv(H) * (std ** 2), [nf, i]
 
 def err_func(x_data, y_data, par, f_par, sigma):
     res = f_par - y_data
