@@ -31,7 +31,7 @@ class Ship():
         c, v = Ship.convert_to_polar([vx, vy])
         b = np.degrees(Ship.transform_to_bearing(b))
         c = np.degrees(Ship.transform_to_bearing(c))
-        return [b, d, c, v]
+        return np.array([b, d, c, v])
 
     @staticmethod
     def convert_to_xy(params):
@@ -42,7 +42,7 @@ class Ship():
         c = Ship.transform_to_angle(np.radians(c))
         vx = v * np.cos(c)
         vy = v * np.sin(c)
-        return [x, y, vx, vy]
+        return np.array([x, y, vx, vy])
 
     def __init__(self, name, *args, mode='xycv', verbose=False):
 

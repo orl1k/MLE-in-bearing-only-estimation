@@ -2,11 +2,9 @@ import numpy as np
 from ship import Ship
 from tests import Tests
 from botma import TMA
-import lm
-import time
 
 # Класс для сохранения результатов
-tests = Tests('1')
+tests = Tests('2')
 
 # Пример моделирования
 
@@ -37,11 +35,13 @@ target.forward_movement(len(observer.coords[0])-1)
 tma = TMA(observer, target, sd=np.radians(0.5), seed=1)
 tma.print_verbose()
 
-print(tma.mle_algorithm_v6([1,1,1,1]))
-tma.get_observed_information()
+# print(tma.mle_algorithm_v6([1,1,1,1]))
+# tma.get_observed_information()
 
-# r = tma.swarm(5)
-# tests.save_results(r)
+dict_results = tma.swarm(n=10, fixed_target=False, fixed_noise=False, p0=[0., 20., 45., 10.])
+df = tests.get_df(dict_results)
+print(df.drop(['П0_ист', 'Д0_ист', 'К0_ист'], axis=1))
+# tests.save_df(df)
 
 # tma.set_target(p0=tma.get_random_p0())
 # p0 = tma.get_random_p0(seed = 692 + 1000)
