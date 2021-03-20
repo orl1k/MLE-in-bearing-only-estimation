@@ -2,7 +2,7 @@ import numpy as np
 from project.ship import Ship
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-import project.lm
+from project.lm import lev_mar
 import time
 
 
@@ -220,7 +220,7 @@ class TMA(Ship):
         algorithm_name = 'ММП v4'
         # w = np.array([np.radians(0.1)**2]*1141)
         start_time = time.perf_counter()
-        res = lm.lm(self._b_func, self.observer_coords,
+        res = lev_mar(self._b_func, self.observer_coords,
                     self.bearings_with_noise, p0, verbose=False, jac=self._b_func_jac)
         stop_time = time.perf_counter()
         perr = np.sqrt(np.diag(res[1]))
@@ -230,7 +230,7 @@ class TMA(Ship):
         algorithm_name = 'ММП v5'
         # w = np.array([np.radians(0.1)**2]*1141)
         start_time = time.perf_counter()
-        res = lm.lm(self._xy_func, self.observer_coords,
+        res = lev_mar(self._xy_func, self.observer_coords,
                     self.bearings_with_noise, p0, verbose=False, jac=self._xy_func_jac)
         stop_time = time.perf_counter()
         perr = np.sqrt(np.diag(res[1]))
@@ -239,7 +239,7 @@ class TMA(Ship):
     def mle_algorithm_v6(self, p0, verbose=False):
         algorithm_name = 'ММП v6'
         start_time = time.perf_counter()
-        res = lm.lm(self._xy_func2, self.observer_data,
+        res = lev_mar(self._xy_func2, self.observer_data,
                     self.bearings_with_noise[self.time], p0, verbose=verbose, jac=self._xy_func2_jac, std=self.standart_deviation)
         stop_time = time.perf_counter()
         perr = np.sqrt(np.diag(res[1]))
