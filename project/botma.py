@@ -380,6 +380,7 @@ class TMA(Ship):
 
         if p0 is not None:
             fixed_p0=True
+            p0 = p0.copy()
         else:
             fixed_p0=False
 
