@@ -51,16 +51,6 @@ target.forward_movement(len(observer.coords[0]) - 1)
 # df = tests.get_df(d_r)
 # print(df.drop(["П0_ист", "Д0_ист", "К0_ист"], axis=1).round(2))
 
-# dict_results = tma.swarm(n=10, seeded=True, fixed_target=False, fixed_noise=False, p0=[0., 20., 45., 10.])
-
-# tma.set_target(p0=tma.get_random_p0())
-# p0 = tma.get_random_p0(seed = 692 + 1000)
-# p0[0] = Ship.transform_to_angle(np.radians(p0[0]))
-# p0[2] = Ship.transform_to_angle(np.radians(p0[2]))
-# b, d, c, v = p0
-# p0 = [d * np.cos(b), d * np.sin(b), v * np.cos(c), v * np.sin(c)]
-# tma.mle_algorithm_v6(p0)
-
 # # Запуск множества моделей
 # dict_results = tma.swarm(n=100, fixed_target=False, fixed_noise=False, p0=[0., 20., 45., 10.])
 # df = tests.get_df(dict_results)

@@ -495,7 +495,7 @@ class TMA(Ship):
         result = {
             algorithm_name: {
                 "Истинные параметры": self.true_params,
-                "Полученные параметры": Ship.convert_to_xy(res),
+                "Полученные параметры": res,
                 "Начальное приближение": p0,
                 "Текущие значения": [
                     self.bearings[self.end_t],
