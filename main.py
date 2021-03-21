@@ -46,6 +46,10 @@ target.forward_movement(len(observer.coords[0]) - 1)
 # target.change_course(270, 'left', omega=0.5)
 # target.forward_movement(360)
 
+# tma = TMA(observer, target=target)
+# print(tma.mle_algorithm_v2([1, 1, 1, 1]))
+# tma.plot_trajectories()
+
 # tma = TMA(observer, std=np.radians(0.1))
 # d_r = tma.swarm(n=10, algorithm_name="Метод N пеленгов", p0=[0, 20, 45, 10])
 # df = tests.get_df(d_r)

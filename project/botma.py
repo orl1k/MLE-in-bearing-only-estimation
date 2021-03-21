@@ -226,9 +226,9 @@ class TMA(Ship):
         # print('- 10% по скорости.')
 
     def plot_trajectories(self):
-        plt.plot(self.observer_coords[0], self.observer_coords[1])
-        plt.plot(self.target.coords[0], self.target.coords[1])
-        m = len(self.observer_coords[0]) // 2
+        plt.plot(self.observer_data[0], self.observer_data[1])
+        plt.plot(self.target_data[0], self.target_data[1])
+        m = len(self.observer_data[0]) // 2
         plt.arrow(
             self.observer_coords[0][m - 30],
             self.observer_coords[1][m - 30],
@@ -240,10 +240,10 @@ class TMA(Ship):
             head_starts_at_zero=True,
         )
         plt.arrow(
-            self.target.coords[0][m - 30],
-            self.target.coords[1][m - 30],
-            self.target.coords[0][m + 1] - self.target.coords[0][m],
-            self.target.coords[1][m + 1] - self.target.coords[1][m],
+            self.target_data[0][m - 30],
+            self.target_data[1][m - 30],
+            self.target_data[0][m + 1] - self.target_data[0][m],
+            self.target_data[1][m + 1] - self.target_data[1][m],
             shape="full",
             lw=0,
             head_width=300,
@@ -498,8 +498,10 @@ class TMA(Ship):
                 "Полученные параметры": res,
                 "Начальное приближение": p0,
                 "Текущие значения": [
-                    self.bearings[self.end_t],
-                    self.distances[self.end_t],
+                    np.degrees(Ship.transform_to_bearing(self.bearings[-1])),
+                    self.distances[-1],
+                    b_end_pred, 
+                    d_end_pred
                 ],
                 "СКО параметров": perr,
                 "Ка, Кб, Кс": [k_a, k_b, k_c],
