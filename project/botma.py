@@ -354,6 +354,7 @@ class TMA(Ship):
         p0_func=None,
         target_func=None,
         p0=None,
+        verbose=False
     ):
         res_arr = []
 
@@ -382,6 +383,8 @@ class TMA(Ship):
             else:
                 p0[0] = Ship.transform_to_angle(np.radians(p0[0]))
                 p0[2] = Ship.transform_to_angle(np.radians(p0[2]))
+        if verbose:
+            start_time = time.perf_counter()
         for i in range(n):
 
             if not fixed_target:
@@ -412,6 +415,10 @@ class TMA(Ship):
 
             result = algorithm(p0)
             res_arr.append(result)
+        if verbose:
+            stop_time = time.perf_counter()
+            print('Алгоритм:: ' + algorithm_name)
+            print('Моделирование {} результатов закончено за t = {:.1f} с'.format(n, stop_time - start_time))
         return res_arr
 
     @staticmethod
