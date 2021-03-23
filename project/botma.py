@@ -1,7 +1,6 @@
 import numpy as np
 from project.ship import Ship
 from scipy.optimize import curve_fit
-import matplotlib.pyplot as plt
 from project.lm import lev_mar
 import time
 
@@ -16,6 +15,7 @@ class TMA(Ship):
         std=np.radians(0.1),
         seed=None,
         end_t=None,
+        verbose=False
     ):
         self.mean = mean
         self.standart_deviation = std
@@ -39,6 +39,11 @@ class TMA(Ship):
             self.distances = self._dist_func(self.observer_data, self.target_data)
 
         self.set_noise(seed=seed)
+        if verbose:
+            print(
+            "СКОп = {:.1f}, ".format(np.degrees(self.standart_deviation))
+            + "tau = {}, ".format(self.tau) + "end_time = {}".format(end_t)
+            )
 
     @staticmethod
     def _bd_func(data, params):
@@ -210,14 +215,8 @@ class TMA(Ship):
             stop_time - start_time,
         )
 
-    def print_verbose(self):
-        # print('П0 = {}, Д0 = {} км, К = {}, V = {} м/c'.format(*self.true_params))
-        print(
-            "СКОп = {:.1f}, ".format(np.degrees(self.standart_deviation))
-            + "tau = {}".format(self.tau)
-        )
-
     def plot_trajectories(self):
+        import matplotlib.pyplot as plt
         plt.plot(self.observer_data[0], self.observer_data[1])
         plt.plot(self.target_data[0], self.target_data[1])
         m = len(self.observer_data[0]) // 2
@@ -260,6 +259,7 @@ class TMA(Ship):
         plt.show()
 
     def plot_bearings(self):
+        import matplotlib.pyplot as plt
         plt.plot(
             self.observer_data[2],
             np.degrees([Ship.to_bearing(i) for i in self.bearings]),
@@ -280,6 +280,7 @@ class TMA(Ship):
         plt.show()
 
     def plot_distances(self):
+        import matplotlib.pyplot as plt
         plt.plot(self.distances, linewidth=5.0)
         d = [np.array(self.observer_coords[0]) - np.array(self.target.coords[0])]
         d.append(np.array(self.observer_coords[1]) - np.array(self.target.coords[1]))
@@ -292,6 +293,7 @@ class TMA(Ship):
         plt.show()
 
     def plot_contour_lines(self):
+        import matplotlib.pyplot as plt
         n = 50
         xlist = np.linspace(-0.1, 0.1, n)
         ylist = np.linspace(9.9, 10.1, n)
@@ -425,8 +427,6 @@ class TMA(Ship):
         r = np.degrees(
             self.bearings_with_noise - self._xy_func(self.observer_data, res)
         )  # residuals
-        plt.plot(r)
-        plt.show()
         b_end_pred = np.degrees(
             Ship.to_bearing(
                 self._xy_func(self.observer_data[:, -1], res)
