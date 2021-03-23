@@ -22,7 +22,10 @@ class TMA(Ship):
         self.observer = observer
         self.observer_coords = np.array(observer.coords)
         self.tau = tau
-        time = np.arange(0, len(self.observer_coords[0]), self.tau)
+        if end_t is None:
+            end_t = len(self.observer.coords[0]) - 1
+        self.end_t = end_t
+        time = np.arange(0, self.end_t + 1, tau)
         self.observer_data = np.vstack((self.observer_coords[:, time], time))
 
         if target is None:
@@ -35,13 +38,10 @@ class TMA(Ship):
             )
             self.distances = self._dist_func(self.observer_data, self.target_data)
 
-        if end_t is None:
-            end_t = self.observer_data.shape[1] - 1
-        self.end_t = end_t
         self.set_noise(seed=seed)
 
     @staticmethod
-    def _b_func(data, params):
+    def _bd_func(data, params):
         bearing, distance, course, velocity = params
         n = len(data[0])
         x_velocity = velocity * np.cos(course)
@@ -61,7 +61,7 @@ class TMA(Ship):
         return angle
 
     @staticmethod
-    def _b_func_jac(data, params):
+    def _bd_func_jac(data, params):
         J = []
         b, d, c, v = params
         n = len(data[0])
@@ -106,9 +106,7 @@ class TMA(Ship):
         return np.array(J).T
 
     @staticmethod
-    def _dist_func(obs_data, tar_data):
-        r_obs = np.delete(obs_data, (2), axis=0)
-        r_tar = np.delete(tar_data, (2), axis=0)
+    def _dist_func(r_obs, r_tar):
         return np.linalg.norm(r_obs - r_tar, 2, axis=0) / 1000
 
     def set_target(self, p0=None, seed=None):
@@ -131,7 +129,7 @@ class TMA(Ship):
         self.bearings = self._xy_func(
             self.observer_data, Ship.convert_to_xy(self.true_params)
         )
-        self.distances = self._dist_func(self.observer_data, self.target_data)
+        self.distances = self._dist_func(self.observer_data[0:2], self.target_data[0:2])
 
     def set_noise(self, seed=None):
         rng = np.random.RandomState(seed)
@@ -143,14 +141,13 @@ class TMA(Ship):
         algorithm_name = "ММП v1"
 
         def f(data, b, d, c, v):
-            return self._b_func(data, [b, d, c, v])
+            return self._bd_func(data, [b, d, c, v])
 
         start_time = time.perf_counter()
         res = curve_fit(
             f, self.observer_coords, self.bearings_with_noise, p0=p0, full_output=True
         )
         stop_time = time.perf_counter()
-        score = res[2]["nfev"]
         score = res[2]["nfev"]
         perr = np.sqrt(np.diag(res[1]))
         return self.get_result(
@@ -219,11 +216,6 @@ class TMA(Ship):
             "СКОп = {:.1f}, ".format(np.degrees(self.standart_deviation))
             + "tau = {}".format(self.tau)
         )
-        # print('Предельно допустимые значения ошибок КПДО:')
-        # print('- 1 градус по пеленгу,')
-        # print('- 15%Д по дальности,')
-        # print('- 10 градусов по курсу,')
-        # print('- 10% по скорости.')
 
     def plot_trajectories(self):
         plt.plot(self.observer_data[0], self.observer_data[1])
@@ -267,30 +259,17 @@ class TMA(Ship):
         ax.legend(["Наблюдатель", "Объект"])
         plt.show()
 
-    def plot_algorithm_comparsion(self):
-        # fig, ax = plt.subplots()
-        # ax.plot(np.degrees(self.bearing_array_with_noise),
-        #         label='зашумленный пеленг')
-        # ax.plot(np.degrees(self.bearing_array),
-        #         label='истинный пеленг', linewidth=4, color='tab:blue')
-        # plt.legend()
-        # ax = plt.gca()
-        # plt.xlim([0, len(self.bearing_array) - 1])
-        # ax.set_xlabel('время (с)')
-        # ax.set_ylabel('пеленг (г)')
-        # plt.show()
-        pass
-
     def plot_bearings(self):
         plt.plot(
-            np.degrees([Ship.transform_to_bearing(i) for i in self.bearings]),
+            self.observer_data[2],
+            np.degrees([Ship.to_bearing(i) for i in self.bearings]),
             linewidth=5.0,
         )
-        plt.plot(
+        plt.plot(self.observer_data[2],
             np.degrees(
                 [
-                    Ship.transform_to_bearing(i)
-                    for i in self._b_func(self.observer_coords, self.last_result)
+                    Ship.to_bearing(i)
+                    for i in self._xy_func(self.observer_data, Ship.convert_to_xy(self.last_result))
                 ]
             )
         )
@@ -298,7 +277,6 @@ class TMA(Ship):
         ax.set_xlabel("время (с)")
         ax.set_ylabel("пеленг (г)")
         ax.legend(["Истинный пеленг", "Расчетный пеленг"])
-        plt.xlim([0, len(self.bearings) - 1])
         plt.show()
 
     def plot_distances(self):
@@ -375,14 +353,14 @@ class TMA(Ship):
         }
         algorithm = alg_dict[algorithm_name]
         if fixed_p0:
-            if algorithm_name in ["ММП v2", "ММП v5"]:
-                p0[0] = Ship.transform_to_angle(np.radians(p0[0]))
-                p0[2] = Ship.transform_to_angle(np.radians(p0[2]))
+            if algorithm_name in ["ММП v2"]:
+                p0[0] = Ship.to_angle(np.radians(p0[0]))
+                p0[2] = Ship.to_angle(np.radians(p0[2]))
                 b, d, c, v = p0
                 p0 = [d * np.cos(b), d * np.sin(b), v * np.cos(c), v * np.sin(c)]
             else:
-                p0[0] = Ship.transform_to_angle(np.radians(p0[0]))
-                p0[2] = Ship.transform_to_angle(np.radians(p0[2]))
+                p0[0] = Ship.to_angle(np.radians(p0[0]))
+                p0[2] = Ship.to_angle(np.radians(p0[2]))
         if verbose:
             start_time = time.perf_counter()
         for i in range(n):
@@ -398,14 +376,14 @@ class TMA(Ship):
                     p0 = p0_func(seed=i)
                 else:
                     p0 = p0_func()
-                if algorithm_name in ["ММП v2", "ММП v5"]:
-                    p0[0] = Ship.transform_to_angle(np.radians(p0[0]))
-                    p0[2] = Ship.transform_to_angle(np.radians(p0[2]))
+                if algorithm_name in ["ММП v2"]:
+                    p0[0] = Ship.to_angle(np.radians(p0[0]))
+                    p0[2] = Ship.to_angle(np.radians(p0[2]))
                     b, d, c, v = p0
                     p0 = [d * np.cos(b), d * np.sin(b), v * np.cos(c), v * np.sin(c)]
                 else:
-                    p0[0] = Ship.transform_to_angle(np.radians(p0[0]))
-                    p0[2] = Ship.transform_to_angle(np.radians(p0[2]))
+                    p0[0] = Ship.to_angle(np.radians(p0[0]))
+                    p0[2] = Ship.to_angle(np.radians(p0[2]))
 
             if not fixed_noise:
                 if seeded:
@@ -426,25 +404,14 @@ class TMA(Ship):
         rng = np.random.RandomState(seed)
         b = 0
         d = rng.uniform(5, 50)
-        c = rng.uniform(0, 180)
-        v = rng.uniform(5, 15)
+        c = rng.uniform(0, 360)
+        v = rng.uniform(5, 25)
         return [b, d, c, v]
-
-    def linear(self):
-        self.mu = np.mean(self.bearings_with_noise)
-        self.shifted_bearings_with_noise = self.bearings_with_noise - self.mu
-        plt.plot(np.tan(self.shifted_bearings_with_noise))
-        plt.show()
 
     def get_observed_information(self):
         params = Ship.convert_to_xy(self.last_result)
-        # f = self._xy_func(self.observer_data, params)
-        # y = self.bearings_with_noise
-        # l = np.sum(np.log(stats.norm.pdf(f, y, np.radians(0.5))))
         J = self._xy_func_jac(self.observer_data, params)
         I = J.T.dot(J) / (self.standart_deviation ** 2)
-        from matplotlib import pyplot as plt
-
         return I
 
     def get_result(self, algorithm_name, res, perr, nfev, p0, t):
@@ -458,20 +425,22 @@ class TMA(Ship):
         r = np.degrees(
             self.bearings_with_noise - self._xy_func(self.observer_data, res)
         )  # residuals
+        plt.plot(r)
+        plt.show()
         b_end_pred = np.degrees(
-            Ship.transform_to_bearing(
-                self._xy_func(self.observer_data[:, self.end_t], res)
+            Ship.to_bearing(
+                self._xy_func(self.observer_data[:, -1], res)
             )
         )
         r_x_end = (
-            self.observer_data[0][self.end_t]
+            self.observer_data[0][-1]
             - 1000 * res[0]
-            - res[2] * self.end_t * self.tau
+            - res[2] * self.end_t
         )
         r_y_end = (
-            self.observer_data[1][self.end_t]
+            self.observer_data[1][-1]
             - 1000 * res[1]
-            - res[3] * self.end_t * self.tau
+            - res[3] * self.end_t
         )
         d_end_pred = np.sqrt(r_x_end ** 2 + r_y_end ** 2) / 1000
         res = Ship.convert_to_bdcv(res)
@@ -505,7 +474,7 @@ class TMA(Ship):
                 "Полученные параметры": res,
                 "Начальное приближение": p0,
                 "Текущие значения": [
-                    np.degrees(Ship.transform_to_bearing(self.bearings[-1])),
+                    np.degrees(Ship.to_bearing(self.bearings[-1])),
                     self.distances[-1],
                     b_end_pred, 
                     d_end_pred
@@ -520,19 +489,18 @@ class TMA(Ship):
 
     def _get_data(self):
         data = {
-            "Время": np.arange(0, len(self.observer_coords[0]), self.tau),
+            "Время": self.observer_data[2],
             "Истинный пеленг": np.degrees(
-                list(map(Ship.transform_to_bearing, self.bearings))
-            )[self.time],
+                list(map(Ship.to_bearing, self.bearings))
+            ),
             "Расстояние": self.distances,
             "Зашумленный пеленг": np.degrees(
-                list(map(Ship.transform_to_bearing, self.bearings_with_noise))
-            ),
+                list(map(Ship.to_bearing, self.bearings_with_noise))),
         }
         return data
 
     def _get_delta(self, d, b_end_pred, d_end_pred):
-        b_end = np.degrees(Ship.transform_to_bearing(self.bearings[-1]))
+        b_end = np.degrees(Ship.to_bearing(self.bearings[-1]))
         d_end = self.distances[-1]
         d[1] /= d_end
         d[3] /= self.true_params[3]

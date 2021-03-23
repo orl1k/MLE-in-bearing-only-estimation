@@ -9,7 +9,7 @@ tests = Tests("2")
 # Пример моделирования
 
 # Создаем наблюдатель
-observer_x, observer_y, observer_course, observer_velocity = 0, 0, 0, 3
+observer_x, observer_y, observer_course, observer_velocity = 0., 0., 0., 3.
 observer = Ship(
     "Наблюдатель",
     observer_x,
@@ -19,7 +19,7 @@ observer = Ship(
     verbose=True,
 )
 # Создаем объект
-target_bearing, target_distance, target_course, target_velocity = 0, 20, 45, 10
+target_bearing, target_distance, target_course, target_velocity = 0., 20., 45., 10.
 target = Ship(
     "Объект",
     target_bearing,
@@ -46,8 +46,9 @@ target.forward_movement(len(observer.coords[0]) - 1)
 # target.change_course(270, 'left', omega=0.5)
 # target.forward_movement(360)
 
-# tma = TMA(observer, target=target)
-# print(tma.mle_algorithm_v2([1, 1, 1, 1]))
+tma = TMA(observer, target=target)
+print(tma.mle_algorithm_v2([1, 1, 1, 1]))
+tma._get_data()
 # tma.plot_trajectories()
 
 # tma = TMA(observer, std=np.radians(0.1))
