@@ -89,7 +89,7 @@ class Ship():
                                                               np.degrees(self.get_course()), time))
 
     def update_position(self):
-        self.position += self.velocity
+        self.position = self.position + self.velocity
         self.coords[0].append(self.position[0])
         self.coords[1].append(self.position[1])
         self.vels[0].append(self.velocity[0])
