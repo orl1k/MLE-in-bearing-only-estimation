@@ -146,7 +146,7 @@ class TMA(Ship):
         algorithm_name = "ММП v1"
 
         def f(data, b, d, c, v):
-            return self._bd_func(data, [b, d, c, v])
+            return self._xy_func(data, [b, d, c, v])
 
         start_time = time.perf_counter()
         res = curve_fit(
@@ -159,7 +159,7 @@ class TMA(Ship):
             algorithm_name, res[0], perr, score, p0, stop_time - start_time
         )
 
-    def mle_algorithm_v2(self, p0, verbose=False):
+    def mle_algorithm_v2(self, p0, verbose=False, full_output=True):
         algorithm_name = "ММП v2"
         start_time = time.perf_counter()
         res = lev_mar(
@@ -173,9 +173,11 @@ class TMA(Ship):
         )
         stop_time = time.perf_counter()
         perr = np.sqrt(np.diag(res[1]))
-        return self.get_result(
-            algorithm_name, res[0].copy(), perr, res[2], p0, stop_time - start_time
-        )
+        if full_output:
+            return self.get_result(
+                algorithm_name, res[0].copy(), perr, res[2], p0, stop_time - start_time
+            )
+        else: return res[0]
 
     def n_bearings_algorithm(self, p0):
         algorithm_name = "Метод N пеленгов"
