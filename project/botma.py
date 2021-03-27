@@ -2,6 +2,8 @@ import numpy as np
 from project.ship import Ship
 from scipy.optimize import curve_fit
 from project.lm import lev_mar
+from scipy.stats import chi2
+from statsmodels.stats.weightstats import ztest
 import time
 
 
@@ -15,7 +17,7 @@ class TMA(Ship):
         std=np.radians(0.1),
         seed=None,
         end_t=None,
-        verbose=False
+        verbose=False,
     ):
         self.mean = mean
         self.standart_deviation = std
@@ -40,9 +42,11 @@ class TMA(Ship):
 
         self.set_noise(seed=seed)
         if verbose:
+            self.verbose = True
             print(
-            "СКОп = {:.1f}, ".format(np.degrees(self.standart_deviation))
-            + "tau = {}, ".format(self.tau) + "end_time = {}".format(end_t)
+                "СКОп = {:.1f}, ".format(np.degrees(self.standart_deviation))
+                + "tau = {}, ".format(self.tau)
+                + "end_time = {}".format(end_t)
             )
 
     @staticmethod
@@ -177,7 +181,8 @@ class TMA(Ship):
             return self.get_result(
                 algorithm_name, res[0].copy(), perr, res[2], p0, stop_time - start_time
             )
-        else: return res[0]
+        else:
+            return res[0]
 
     def n_bearings_algorithm(self, p0):
         algorithm_name = "Метод N пеленгов"
@@ -219,6 +224,7 @@ class TMA(Ship):
 
     def plot_trajectories(self):
         import matplotlib.pyplot as plt
+
         plt.plot(self.observer_data[0], self.observer_data[1])
         plt.plot(self.target_data[0], self.target_data[1])
         m = len(self.observer_data[0]) // 2
@@ -262,18 +268,22 @@ class TMA(Ship):
 
     def plot_bearings(self):
         import matplotlib.pyplot as plt
+
         plt.plot(
             self.observer_data[2],
             np.degrees([Ship.to_bearing(i) for i in self.bearings]),
             linewidth=5.0,
         )
-        plt.plot(self.observer_data[2],
+        plt.plot(
+            self.observer_data[2],
             np.degrees(
                 [
                     Ship.to_bearing(i)
-                    for i in self._xy_func(self.observer_data, Ship.convert_to_xy(self.last_result))
+                    for i in self._xy_func(
+                        self.observer_data, Ship.convert_to_xy(self.last_result)
+                    )
                 ]
-            )
+            ),
         )
         ax = plt.gca()
         ax.set_xlabel("время (с)")
@@ -283,6 +293,7 @@ class TMA(Ship):
 
     def plot_distances(self):
         import matplotlib.pyplot as plt
+
         plt.plot(self.distances, linewidth=5.0)
         d = [np.array(self.observer_coords[0]) - np.array(self.target.coords[0])]
         d.append(np.array(self.observer_coords[1]) - np.array(self.target.coords[1]))
@@ -296,6 +307,7 @@ class TMA(Ship):
 
     def plot_contour_lines(self):
         import matplotlib.pyplot as plt
+
         n = 50
         xlist = np.linspace(-0.1, 0.1, n)
         ylist = np.linspace(9.9, 10.1, n)
@@ -336,7 +348,7 @@ class TMA(Ship):
         p0_func=None,
         target_func=None,
         p0=None,
-        verbose=False
+        verbose=False,
     ):
         res_arr = []
 
@@ -399,8 +411,12 @@ class TMA(Ship):
             res_arr.append(result)
         if verbose:
             stop_time = time.perf_counter()
-            print('Алгоритм:: ' + algorithm_name)
-            print('Моделирование {} результатов закончено за t = {:.1f} с'.format(n, stop_time - start_time))
+            print("Алгоритм:: " + algorithm_name)
+            print(
+                "Моделирование {} результатов закончено за t = {:.1f} с".format(
+                    n, stop_time - start_time
+                )
+            )
         return res_arr
 
     @staticmethod
@@ -419,31 +435,25 @@ class TMA(Ship):
         return I
 
     def get_result(self, algorithm_name, res, perr, nfev, p0, t):
+        res = [0, 20, 10/np.sqrt(2), 10/np.sqrt(2)]
+        r = self.bearings_with_noise - self._xy_func(self.observer_data, res) # residuals
+        chi_2 = sum((r) ** 2) / r.var(ddof=1)
+        # r = (r + np.pi) % (2 * np.pi) - np.pi # normalization
+        if self.verbose:
+            # Проверка гипотезы
+            print('z_stat = {:.2f}, p-value = {:.4f}'.format(*ztest(r, ddof=5)))
+            print('chi2_stat = {:.2f}, p-value = {:.4f}'.format(chi_2, 1 - chi2.cdf(chi_2, len(r) - 5)))
+            from matplotlib import pyplot as plt
+            # plt.plot(r)
+            # plt.plot(self.bearings)
+            # plt.plot(self._xy_func(self.observer_data, res))
+            # plt.show()
 
-        # f = self.b_func(self.observer_coords, params)
-        # bwn = self.bearings_with_noise
-        # ss_res = sum((np.array(f) - bwn)**2)
-        # ss_tol = sum((bwn - np.mean(bwn))**2)
-        # R2 = 1 - ss_res / ss_tol
-
-        r = np.degrees(
-            self.bearings_with_noise - self._xy_func(self.observer_data, res)
-        )  # residuals
         b_end_pred = np.degrees(
-            Ship.to_bearing(
-                self._xy_func(self.observer_data[:, -1], res)
-            )
+            Ship.to_bearing(self._xy_func(self.observer_data[:, -1], res))
         )
-        r_x_end = (
-            self.observer_data[0][-1]
-            - 1000 * res[0]
-            - res[2] * self.end_t
-        )
-        r_y_end = (
-            self.observer_data[1][-1]
-            - 1000 * res[1]
-            - res[3] * self.end_t
-        )
+        r_x_end = self.observer_data[0][-1] - 1000 * res[0] - res[2] * self.end_t
+        r_y_end = self.observer_data[1][-1] - 1000 * res[1] - res[3] * self.end_t
         d_end_pred = np.sqrt(r_x_end ** 2 + r_y_end ** 2) / 1000
         res = Ship.convert_to_bdcv(res)
 
@@ -451,6 +461,7 @@ class TMA(Ship):
             p0 = Ship.convert_to_bdcv(p0)
 
         self.last_result = res
+        r = np.degrees(r)
         k_a = np.sum(r ** 2) / len(r)
 
         d = np.array([1 / 1, 1 / 0.15, 1 / 10, 1 / 0.1])
@@ -478,8 +489,8 @@ class TMA(Ship):
                 "Текущие значения": [
                     np.degrees(Ship.to_bearing(self.bearings[-1])),
                     self.distances[-1],
-                    b_end_pred, 
-                    d_end_pred
+                    b_end_pred,
+                    d_end_pred,
                 ],
                 "СКО параметров": perr,
                 "Ка, Кб, Кс": [k_a, k_b, k_c],
@@ -492,12 +503,11 @@ class TMA(Ship):
     def _get_data(self):
         data = {
             "Время": self.observer_data[2],
-            "Истинный пеленг": np.degrees(
-                list(map(Ship.to_bearing, self.bearings))
-            ),
+            "Истинный пеленг": np.degrees(list(map(Ship.to_bearing, self.bearings))),
             "Расстояние": self.distances,
             "Зашумленный пеленг": np.degrees(
-                list(map(Ship.to_bearing, self.bearings_with_noise))),
+                list(map(Ship.to_bearing, self.bearings_with_noise))
+            ),
         }
         return data
 
