@@ -64,8 +64,8 @@ class Ship():
         self.verbose = verbose
         self.true_params = list(args[:4])
         self.name = name
-        self.position = np.array([self.x_origin, self.y_origin])
-        self.velocity = np.array([self.x_velocity, self.y_velocity])
+        self.position = np.array([self.x_origin, self.y_origin], dtype=np.float64)
+        self.velocity = np.array([self.x_velocity, self.y_velocity], dtype=np.float64)
         self.coords = [[self.x_origin], [self.y_origin]]
         self.vels = [[self.x_velocity], [self.y_velocity]]
 
@@ -89,7 +89,7 @@ class Ship():
                                                               np.degrees(self.get_course()), time))
 
     def update_position(self):
-        self.position = self.position + self.velocity
+        self.position += self.velocity
         self.coords[0].append(self.position[0])
         self.coords[1].append(self.position[1])
         self.vels[0].append(self.velocity[0])
