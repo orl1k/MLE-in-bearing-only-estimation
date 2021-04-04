@@ -13,14 +13,14 @@ class TMA(Ship):
         observer,
         target=None,
         tau=2,
-        mean=0,
-        std=np.radians(0.1),
+        noise_mean=0,
+        noise_std=np.radians(0.1),
         seed=None,
         end_t=None,
         verbose=False,
     ):
-        self.mean = mean
-        self.standart_deviation = std
+        self.noise_mean = noise_mean
+        self.noise_std = noise_std
         self.observer = observer
         self.observer_coords = np.array(observer.coords)
         self.tau = tau
@@ -35,16 +35,21 @@ class TMA(Ship):
         else:
             self.target_data = np.vstack((np.array(target.coords)[:, time], time))
             self.true_params = np.array(target.get_params())
-            self.bearings = self._xy_func(
-                self.observer_data, Ship.convert_to_xy(self.true_params)
-            )
+            
+            # self.bearings = self._xy_func(
+            #     self.observer_data, Ship.convert_to_xy(self.true_params)
+            # )
+
+            rx = self.target_data[0] - self.observer_data[0]
+            ry = self.target_data[1] - self.observer_data[1]
+            self.bearings = np.arctan2(ry, rx)
             self.distances = self._dist_func(self.observer_data, self.target_data)
 
         self.set_noise(seed=seed)
         if verbose:
             self.verbose = True
             print(
-                "СКОп = {:.1f}, ".format(np.degrees(self.standart_deviation))
+                "СКОп = {:.1f}, ".format(np.degrees(self.noise_std))
                 + "tau = {}, ".format(self.tau)
                 + "end_time = {}".format(end_t)
             )
@@ -133,7 +138,7 @@ class TMA(Ship):
         )  # создаем корабль-объект
         target.forward_movement(len(self.observer_coords[0]) - 1)
         self.true_params = target.get_params()
-        time = np.arange(0, len(self.observer_coords[0]), self.tau)
+        time = np.arange(0, self.end_t + 1, self.tau)
         self.target_data = np.vstack((np.array(target.coords)[:, time], time))
         self.bearings = self._xy_func(
             self.observer_data, Ship.convert_to_xy(self.true_params)
@@ -143,7 +148,7 @@ class TMA(Ship):
     def set_noise(self, seed=None):
         rng = np.random.RandomState(seed)
         self.bearings_with_noise = self.bearings.copy()
-        noise = rng.normal(self.mean, self.standart_deviation, len(self.bearings))
+        noise = rng.normal(self.noise_mean, self.noise_std, len(self.bearings))
         self.bearings_with_noise += noise
 
     def mle_algorithm_v1(self, p0):
@@ -158,7 +163,12 @@ class TMA(Ship):
         )
         stop_time = time.perf_counter()
         score = res[2]["nfev"]
-        perr = np.sqrt(np.diag(res[1]))
+        if (np.diag(res[1]) < 0).any():
+            perr = np.empty(4)
+            perr[:] = np.nan
+        else:
+            perr = np.sqrt(np.diag(res[1]))
+        
         return self.get_result(
             algorithm_name, res[0], perr, score, p0, stop_time - start_time
         )
@@ -173,10 +183,14 @@ class TMA(Ship):
             p0,
             verbose=verbose,
             jac=self._xy_func_jac,
-            std=self.standart_deviation,
+            std=self.noise_std,
         )
         stop_time = time.perf_counter()
-        perr = np.sqrt(np.diag(res[1]))
+        if (np.diag(res[1]) < 0).any():
+            perr = np.empty(4)
+            perr[:] = np.nan
+        else:
+            perr = np.sqrt(np.diag(res[1]))
         if full_output:
             return self.get_result(
                 algorithm_name, res[0].copy(), perr, res[2], p0, stop_time - start_time
@@ -431,19 +445,18 @@ class TMA(Ship):
     def get_observed_information(self):
         params = Ship.convert_to_xy(self.last_result)
         J = self._xy_func_jac(self.observer_data, params)
-        I = J.T.dot(J) / (self.standart_deviation ** 2)
+        I = J.T.dot(J) / (self.noise_std ** 2)
         return I
 
     def get_result(self, algorithm_name, res, perr, nfev, p0, t):
-        res = [0, 20, 10/np.sqrt(2), 10/np.sqrt(2)]
         r = self.bearings_with_noise - self._xy_func(self.observer_data, res) # residuals
-        chi_2 = sum((r) ** 2) / r.var(ddof=1)
+        # chi_2 = sum((r) ** 2) / r.var(ddof=1)
         # r = (r + np.pi) % (2 * np.pi) - np.pi # normalization
-        if self.verbose:
+        # if self.verbose:
             # Проверка гипотезы
-            print('z_stat = {:.2f}, p-value = {:.4f}'.format(*ztest(r, ddof=5)))
-            print('chi2_stat = {:.2f}, p-value = {:.4f}'.format(chi_2, 1 - chi2.cdf(chi_2, len(r) - 5)))
-            from matplotlib import pyplot as plt
+            # print('z_stat = {:.2f}, p-value = {:.4f}'.format(*ztest(r, ddof=5)))
+            # print('chi2_stat = {:.2f}, p-value = {:.4f}'.format(chi_2, 1 - chi2.cdf(chi_2, len(r) - 5)))
+            # from matplotlib import pyplot as plt
             # plt.plot(r)
             # plt.plot(self.bearings)
             # plt.plot(self._xy_func(self.observer_data, res))
