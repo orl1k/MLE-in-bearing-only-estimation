@@ -1,6 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.pyplot as plt
 
 """
     Класс предназначен для сохранения результатов.
@@ -13,7 +13,6 @@ import pandas as pd
 
     save_results() предназначен для сохранения результатов метода tma.swarm()
 """
-
 
 class Tests:
     def __init__(self, name):

@@ -1,5 +1,5 @@
 import numpy as np
-from project.ship import Ship
+from project.object import Object
 from project.tests import Tests
 from project.botma import TMA
 
@@ -10,7 +10,7 @@ tests = Tests("1")
 
 # Создаем наблюдатель
 observer_x, observer_y, observer_course, observer_velocity = 0.0, 0.0, 0.0, 3.0
-observer = Ship(
+observer = Object(
     "Наблюдатель",
     observer_x,
     observer_y,
@@ -26,7 +26,7 @@ target_bearing, target_distance, target_course, target_velocity = (
     10.0,
 )
 
-target = Ship(
+target = Object(
     "Объект",
     target_bearing,
     target_distance,
@@ -46,6 +46,10 @@ observer.forward_movement(3 * 60)
 
 # Время движения объекта должно совпадать с временем наблюдателя для TMA
 target.forward_movement(len(observer.coords[0]) - 1)
+
+tma = TMA(observer)
+np.set_printoptions(precision=2)
+print(tma.mle_algorithm_v2([1, 1, 1, 1]))
 
 # # Рассматривается маневр объекта
 # target.forward_movement(7 * 60)

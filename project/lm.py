@@ -1,7 +1,6 @@
 import numpy as np
+import project.functions as f
 from scipy.linalg import cho_factor, cho_solve
-
-from project.ship import Ship
 
 
 def lev_mar(
@@ -89,9 +88,7 @@ def lev_mar(
                             delta_err, delta_par, par
                         )
                     )
-                    print(
-                        "           grad = {}".format(b)
-                    )
+                    print("           grad = {}".format(b))
 
                 if not step:
                     lam *= up_factor
@@ -158,5 +155,5 @@ def numeric_jac(f, x_data, par, f_par):
 
 
 def _format_par(par):
-    res = Ship.convert_to_bdcv(par)
+    res = f.convert_to_bdcv(par)
     return res
