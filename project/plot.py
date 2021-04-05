@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+
 def plot_trajectories(self):
 
     plt.plot(self.observer_data[0], self.observer_data[1])
@@ -43,6 +44,7 @@ def plot_trajectories(self):
     ax.legend(["Наблюдатель", "Объект"])
     plt.show()
 
+
 def plot_bearings(self):
 
     plt.plot(
@@ -67,7 +69,8 @@ def plot_bearings(self):
     ax.legend(["Истинный пеленг", "Расчетный пеленг"])
     plt.show()
 
+
 def plot_trajectory(self):
-        plt.plot(self.coords[0], self.coords[1])
-        plt.axis("square")
-        plt.show()
+    plt.plot(self.coords[0], self.coords[1])
+    plt.axis("square")
+    plt.show()

@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
     Курс - .x градусов
     Скорость - .xx м / с
 
-    save_results() предназначен для сохранения результатов метода tma.swarm()
 """
+
 
 class Tests:
     def __init__(self, name):

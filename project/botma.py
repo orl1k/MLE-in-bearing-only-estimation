@@ -34,7 +34,7 @@ class TMA(Object):
         else:
             self.target_data = np.vstack((np.array(target.coords)[:, time], time))
             self.true_params = np.array(target.get_params())
-            
+
             # self.bearings = f.xy_func(
             #     self.observer_data, f.convert_to_xy(self.true_params)
             # )
@@ -70,9 +70,7 @@ class TMA(Object):
         self.true_params = target.get_params()
         time = np.arange(0, self.end_t + 1, self.tau)
         self.target_data = np.vstack((np.array(target.coords)[:, time], time))
-        self.bearings = f.xy_func(
-            self.observer_data, f.convert_to_xy(self.true_params)
-        )
+        self.bearings = f.xy_func(self.observer_data, f.convert_to_xy(self.true_params))
         self.distances = f.dist_func(self.observer_data[0:2], self.target_data[0:2])
 
     def set_noise(self, seed=None):
@@ -98,13 +96,13 @@ class TMA(Object):
             perr[:] = np.nan
         else:
             perr = np.sqrt(np.diag(res[1]))
-        
+
         return self.get_result(
             algorithm_name, res[0], perr, score, p0, stop_time - start_time
         )
 
     def mle_algorithm_v2(self, p0, verbose=False, full_output=True):
-        algorithm_name = "ММП v2"
+        algorithm_name = "ММП"
         start_time = time.perf_counter()
         res = lev_mar(
             f.xy_func,
@@ -138,7 +136,7 @@ class TMA(Object):
         bearings = self.bearings_with_noise
         bearing_origin = np.array([b0] * n)
 
-        H = [-np.sin(bearing_origin - bearings) * 1000.]
+        H = [-np.sin(bearing_origin - bearings) * 1000.0]
         H.append(np.sin(bearings) * self.observer_data[2])
         H.append(-np.cos(bearings) * self.observer_data[2])
         H = np.array(H).T
@@ -146,7 +144,7 @@ class TMA(Object):
             bearings
         )
 
-        res = np.linalg.solve(np.dot(H.T, H), np.dot(H.T, d))
+        res = np.linalg.solve(H.T.dot(H), H.T.dot(d))
 
         # reg = LinearRegression().fit(H, d)
         # res = reg.coef_
@@ -166,9 +164,43 @@ class TMA(Object):
             stop_time - start_time,
         )
 
+    def real_time_process(self, p0, start_t, delta_t):
+        end_t_ind = start_t // self.tau
+        delta_t_ind = delta_t // self.tau
+        res_t = []
+        # lam = 1e-2
+        for i in range(end_t_ind, self.observer_data.shape[1], delta_t_ind):
+            start_time = time.perf_counter()
+            res = lev_mar(
+                f.xy_func,
+                self.observer_data[:, : i + 1],
+                self.bearings_with_noise[: i + 1],
+                p0,
+                verbose=False,
+                jac=f.xy_func_jac,
+                return_lambda=True,
+                std=self.noise_std,
+            )
+            stop_time = time.perf_counter()
+            res_t.append(
+                self.get_result(
+                    "ММП в реальном времени",
+                    res[0],
+                    np.sqrt(np.diag(res[1])),
+                    res[2],
+                    p0,
+                    stop_time - start_time,
+                )
+            )
+            # p0 = res[0]
+            # if np.linalg.norm(p0, np.inf) > 100:
+            #     p0 = [0.0, 20.0, 45.0, 10.0]
+            # lam = res[3] * 4
+        return res_t
+
     def swarm(
         self,
-        algorithm_name="ММП v2",
+        algorithm_name="ММП",
         n=100,
         seeded=True,
         fixed_target=False,
@@ -192,12 +224,12 @@ class TMA(Object):
             target_func = f.get_random_p0
 
         alg_dict = {
-            "ММП v2": self.mle_algorithm_v2,
+            "ММП": self.mle_algorithm_v2,
             "Метод N пеленгов": self.n_bearings_algorithm,
         }
         algorithm = alg_dict[algorithm_name]
         if fixed_p0:
-            if algorithm_name in ["ММП v2"]:
+            if algorithm_name in ["ММП"]:
                 p0[0] = f.to_angle(np.radians(p0[0]))
                 p0[2] = f.to_angle(np.radians(p0[2]))
                 b, d, c, v = p0
@@ -220,7 +252,7 @@ class TMA(Object):
                     p0 = p0_func(seed=i)
                 else:
                     p0 = p0_func()
-                if algorithm_name in ["ММП v2"]:
+                if algorithm_name in ["ММП"]:
                     p0[0] = f.to_angle(np.radians(p0[0]))
                     p0[2] = f.to_angle(np.radians(p0[2]))
                     b, d, c, v = p0
@@ -254,28 +286,26 @@ class TMA(Object):
         return I
 
     def get_result(self, algorithm_name, res, perr, nfev, p0, t):
-        r = self.bearings_with_noise - f.xy_func(self.observer_data, res) # residuals
+        r = self.bearings_with_noise - f.xy_func(self.observer_data, res)  # residuals
         # chi_2 = sum((r) ** 2) / r.var(ddof=1)
         # r = (r + np.pi) % (2 * np.pi) - np.pi # normalization
         # if self.verbose:
-            # Проверка гипотезы
-            # print('z_stat = {:.2f}, p-value = {:.4f}'.format(*ztest(r, ddof=5)))
-            # print('chi2_stat = {:.2f}, p-value = {:.4f}'.format(chi_2, 1 - chi2.cdf(chi_2, len(r) - 5)))
-            # from matplotlib import pyplot as plt
-            # plt.plot(r)
-            # plt.plot(self.bearings)
-            # plt.plot(f.xy_func(self.observer_data, res))
-            # plt.show()
+        # Проверка гипотезы
+        # print('z_stat = {:.2f}, p-value = {:.4f}'.format(*ztest(r, ddof=5)))
+        # print('chi2_stat = {:.2f}, p-value = {:.4f}'.format(chi_2, 1 - chi2.cdf(chi_2, len(r) - 5)))
+        # from matplotlib import pyplot as plt
+        # plt.plot(r)
+        # plt.plot(self.bearings)
+        # plt.plot(f.xy_func(self.observer_data, res))
+        # plt.show()
 
-        b_end_pred = np.degrees(
-            f.to_bearing(f.xy_func(self.observer_data[:, -1], res))
-        )
-        r_x_end = self.observer_data[0][-1] - 1000. * res[0] - res[2] * self.end_t
-        r_y_end = self.observer_data[1][-1] - 1000. * res[1] - res[3] * self.end_t
-        d_end_pred = np.sqrt(r_x_end ** 2 + r_y_end ** 2) / 1000.
+        b_end_pred = np.degrees(f.to_bearing(f.xy_func(self.observer_data[:, -1], res)))
+        r_x_end = self.observer_data[0][-1] - 1000.0 * res[0] - res[2] * self.end_t
+        r_y_end = self.observer_data[1][-1] - 1000.0 * res[1] - res[3] * self.end_t
+        d_end_pred = np.sqrt(r_x_end ** 2 + r_y_end ** 2) / 1000.0
         res = f.convert_to_bdcv(res)
 
-        if algorithm_name in ["ММП v1", "ММП v2"]:
+        if algorithm_name in ["ММП v1", "ММП"]:
             p0 = f.convert_to_bdcv(p0)
 
         self.last_result = res

@@ -15,8 +15,9 @@ def lev_mar(
     lam=1e-2,
     down_factor=0.5,
     up_factor=3,
-    max_it=100,
+    max_it=1000,
     ftol=1e-8,
+    return_lambda = False
 ):
     i = 0  # Число итераций
     nf = 1  # Число вычислений функции
@@ -121,15 +122,22 @@ def lev_mar(
             )
         )
         print(statuses[status][0])
-    H = J.T.dot(J)
 
-    if std is None:
-        return par, np.linalg.inv(H) * err / (len(y_data) - len(par)), [nf, i]
-    else:
+    H = J.T.dot(J)
+    if return_lambda:
         try:
-            return par, np.linalg.inv(H) * (std ** 2), [nf, i]
+            return par, np.linalg.inv(H) * (std ** 2), [nf, i], lam
         except np.linalg.LinAlgError:
-            return par, np.nan * np.ones(shape=(4, 4)), [nf, i]
+            return par, np.nan * np.ones(shape=(4, 4)), [nf, i], lam
+    else:
+        if std is None:
+            return par, np.linalg.inv(H) * err / (len(y_data) - len(par)), [nf, i]
+        else:
+            try:
+                return par, np.linalg.inv(H) * (std ** 2), [nf, i]
+            except np.linalg.LinAlgError:
+                return par, np.nan * np.ones(shape=(4, 4)), [nf, i]
+        
 
 
 def err_func(x_data, y_data, par, f_par, sigma):

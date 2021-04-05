@@ -47,9 +47,11 @@ observer.forward_movement(3 * 60)
 # Время движения объекта должно совпадать с временем наблюдателя для TMA
 target.forward_movement(len(observer.coords[0]) - 1)
 
-tma = TMA(observer)
-np.set_printoptions(precision=2)
-print(tma.mle_algorithm_v2([1, 1, 1, 1]))
+tma = TMA(observer, target=target, seed=1, tau=2, noise_std=np.radians(1))
+np.set_printoptions(precision=2, suppress=True)
+r = tma.real_time_process([0.0, 25.0, 7, 0], 420, 2)
+df = tests.get_df(r)
+print(df)
 
 # # Рассматривается маневр объекта
 # target.forward_movement(7 * 60)
