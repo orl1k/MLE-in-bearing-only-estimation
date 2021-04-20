@@ -130,7 +130,7 @@ def convert_to_xy(params):
 
 def get_df(res):
     try:
-        algorithm_name = list(res[0].keys())[0]
+        algorithm_name = list(res.keys())[0]
     except AttributeError:
         res = np.ravel(res)
         algorithm_name = "ММП в реальном времени"
@@ -165,7 +165,7 @@ def get_df(res):
         ]
     )
     for i, r in enumerate(res):
-        r = r[algorithm_name]
+        r = res[algorithm_name]
         flat_list = [item for sublist in r.values() for item in sublist]
         df.loc[i] = flat_list
     return df

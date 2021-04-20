@@ -48,12 +48,12 @@ def n_bearings_algorithm(model, p0):
 def mle_algorithm_v1(model, p0):
     algorithm_name = "ММП scipy"
 
-    def f(data, b, d, c, v):
+    def fun(data, b, d, c, v):
         return f.xy_func(data, [b, d, c, v])
 
     start_time = time.perf_counter()
     res = curve_fit(
-        f, model.observer_coords, model.bearings_with_noise, p0=p0, full_output=True
+        fun, model.observer_data, model.bearings_with_noise, p0=p0, full_output=True
     )
     stop_time = time.perf_counter()
     score = res[2]["nfev"]
@@ -64,8 +64,14 @@ def mle_algorithm_v1(model, p0):
         perr = np.sqrt(np.diag(res[1]))
 
     return get_result(
-        model, algorithm_name, res[0], perr, score, p0, stop_time - start_time
-    )
+            model,
+            algorithm_name,
+            res[0].copy(),
+            perr,
+            [score, np.nan],
+            p0,
+            stop_time - start_time,
+        )
 
 
 def mle_algorithm_v2(model, p0, verbose=False, full_output=True):
@@ -174,7 +180,7 @@ def swarm(
     }
     algorithm = alg_dict[algorithm_name]
     if fixed_p0:
-        if algorithm_name in "ММП в реальном времени":
+        if algorithm_name in ["ММП", "ММП в реальном времени", "ММП scipy"]:
             p0[0] = f.to_angle(np.radians(p0[0]))
             p0[2] = f.to_angle(np.radians(p0[2]))
             b, d, c, v = p0
@@ -197,7 +203,7 @@ def swarm(
                 p0 = p0_func(seed=i)
             else:
                 p0 = p0_func()
-            if algorithm_name in ["ММП в реальном времени"]:
+            if algorithm_name in ["ММП", "ММП в реальном времени", "ММП scipy"]:
                 p0[0] = f.to_angle(np.radians(p0[0]))
                 p0[2] = f.to_angle(np.radians(p0[2]))
                 b, d, c, v = p0
@@ -216,7 +222,7 @@ def swarm(
         res_arr.append(result)
     if verbose:
         stop_time = time.perf_counter()
-        print("Алгоритм:: " + algorithm_name)
+        print("Алгоритм: " + algorithm_name)
         print(
             "Моделирование {} результатов закончено за t = {:.1f} с".format(
                 n, stop_time - start_time
@@ -245,7 +251,7 @@ def get_result(model, algorithm_name, res, perr, nfev, p0, t):
     d_end_pred = np.sqrt(r_x_end ** 2 + r_y_end ** 2) / 1000.0
     res = f.convert_to_bdcv(res)
 
-    if algorithm_name in "ММП в реальном времени":
+    if algorithm_name in ["ММП", "ММП в реальном времени", "ММП scipy"]:
         p0 = f.convert_to_bdcv(p0)
 
     model.last_result = res
