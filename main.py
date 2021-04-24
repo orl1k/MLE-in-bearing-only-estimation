@@ -1,7 +1,8 @@
 import numpy as np
-from lib.object import Object
-from lib.tests import Tests
-from lib.model import Model
+
+from tma.object import Object
+from tma.tests import Tests
+from tma.model import Model
 
 # Пример моделирования
 
@@ -44,8 +45,8 @@ observer.forward_movement(3 * 60)
 # Время движения объекта должно совпадать с временем наблюдателя для TMA
 target.forward_movement(len(observer.coords[0]) - 1)
 
-from lib.algorithms import mle_algorithm_v1
-from lib.functions import get_df
+from tma.algorithms import mle_algorithm_v1
+from tma.functions import get_df
 model = Model(observer, target=target)
 print(get_df(mle_algorithm_v1(model, [1,1,1,1])))
 

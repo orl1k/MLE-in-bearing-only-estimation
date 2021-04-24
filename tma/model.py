@@ -1,7 +1,7 @@
 import numpy as np
-from lib.object import Object
+from tma.object import Object
 from scipy.optimize import curve_fit
-import lib.functions as f
+import tma.functions as f
 
 
 class Model(Object):

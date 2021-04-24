@@ -165,7 +165,7 @@ def get_df(res):
         ]
     )
     for i, r in enumerate(res):
-        r = res[algorithm_name]
+        r = r[algorithm_name]
         flat_list = [item for sublist in r.values() for item in sublist]
         df.loc[i] = flat_list
     return df

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import lib.functions as f
+import tma.functions as f
 
 
 class Object:

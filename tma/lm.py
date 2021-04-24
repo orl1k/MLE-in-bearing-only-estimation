@@ -1,5 +1,5 @@
 import numpy as np
-import lib.functions as f
+import tma.functions as f
 from scipy.linalg import cho_factor, cho_solve
 
 

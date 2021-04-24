@@ -1,6 +1,6 @@
 import numpy as np
-import lib.functions as f
-from lib.lm import lev_mar
+import tma.functions as f
+from tma.lm import lev_mar
 from scipy.optimize import curve_fit
 import time
 
