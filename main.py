@@ -18,7 +18,7 @@ observer = Object(
 )
 # Создаем объект
 target_bearing, target_distance, target_course, target_velocity = (
-    0.0,
+    5.0,
     20.0,
     45.0,
     10.0,
@@ -42,13 +42,17 @@ observer.forward_movement(5 * 60)
 observer.change_course(90, "right", omega=0.5)
 observer.forward_movement(3 * 60)
 
-# Время движения объекта должно совпадать с временем наблюдателя для TMA
+# Время движения объекта должно совпадать с временем наблюдателя
 target.forward_movement(len(observer.coords[0]) - 1)
 
-from tma.algorithms import mle_algorithm_v1
+from tma.algorithms import mle_algorithm_v2, swarm
 from tma.functions import get_df
-model = Model(observer, target=target)
-print(get_df(mle_algorithm_v1(model, [1,1,1,1])))
+from tma.plot import plot_trajectory, plot_bearings, plot_trajectories
+
+model = Model(observer, target=target, noise_std=np.radians(1))
+result = mle_algorithm_v2(model, p0=[1, 1, 1, 1])
+
+# plot_bearings(model, result)
 
 # # Рассматривается маневр объекта
 # target.forward_movement(7 * 60)
@@ -56,6 +60,5 @@ print(get_df(mle_algorithm_v1(model, [1,1,1,1])))
 # target.forward_movement(len(observer.coords[0]) - len(target.coords[0]))
 
 # # Запуск множества моделей
-# dict_results = tma.swarm(n=100, fixed_target=False, fixed_noise=False, p0=[0., 20., 45., 10.])
+# dict_results = swarm(n=100, fixed_target=False, fixed_noise=False, p0=[0., 20., 45., 10.])
 # df = f.get_df(dict_results)
-# tests.save_df(df)

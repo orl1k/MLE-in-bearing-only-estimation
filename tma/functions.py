@@ -130,7 +130,7 @@ def convert_to_xy(params):
 
 def get_df(res):
     try:
-        algorithm_name = list(res.keys())[0]
+        algorithm_name = list(res[0].keys())[0]
     except AttributeError:
         res = np.ravel(res)
         algorithm_name = "ММП в реальном времени"

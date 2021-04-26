@@ -84,7 +84,7 @@ def mle_algorithm_v2(model, p0, verbose=False, full_output=True):
         p0,
         verbose=verbose,
         jac=f.xy_func_jac,
-        std=model.noise_std,
+        std=model.noise_std
     )
     stop_time = time.perf_counter()
     if (np.diag(res[1]) < 0).any():

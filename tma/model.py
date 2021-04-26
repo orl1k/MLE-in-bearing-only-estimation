@@ -1,10 +1,9 @@
 import numpy as np
 from tma.object import Object
-from scipy.optimize import curve_fit
 import tma.functions as f
 
 
-class Model(Object):
+class Model():
     def __init__(
         self,
         observer,
@@ -38,7 +37,7 @@ class Model(Object):
             print(
                 "СКОп = {:.1f}, ".format(np.degrees(self.noise_std))
                 + "tau = {}, ".format(self.tau)
-                + "end_time = {}".format(end_t)
+                + "end_time = {}".format(self.end_t)
             )
 
     def new_target(self, p0=None, seed=None):
@@ -82,7 +81,7 @@ class Model(Object):
         I = J.T.dot(J) / (self.noise_std ** 2)
         return I
 
-    def _get_data(self):
+    def get_data(self):
         data = {
             "Время": self.observer_data[2],
             "Истинный пеленг": np.degrees(list(map(f.to_bearing, self.bearings))),
