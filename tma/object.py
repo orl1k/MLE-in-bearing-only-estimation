@@ -68,6 +68,7 @@ class Object:
     def change_course(self, new_course, turn, radius=None, omega=0.5, stop_time=None):
         """ поворот на новый курс new_course """
         new_course = np.radians(new_course)
+        t = 0
         if radius != None:
             theta = np.pi - 2 * np.arccos(
                 np.linalg.norm((self.velocity)) / (2 * radius)
@@ -77,7 +78,6 @@ class Object:
 
         if turn == "left":
             theta = -theta
-        t = 0
         if stop_time != None:
             while t < stop_time:
                 t += 1

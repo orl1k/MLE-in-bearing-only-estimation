@@ -76,8 +76,9 @@ def plot_trajectories(model):
         interval=100,
         blit=True,
     )
-    ani.save('trajectory.gif')
+    ani.save("trajectory.gif")
     plt.show()
+
 
 def plot_bearings(model, result):
 
