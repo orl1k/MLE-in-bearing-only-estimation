@@ -104,6 +104,6 @@ def plot_bearings(model, result):
 
 
 def plot_trajectory(object):
-    plt.plot(object.coords[0], object.coords[1])
+    plt.plot(object.coords[0], object.coords[1], "b--", alpha=0.5)
     plt.axis("square")
     plt.show()
