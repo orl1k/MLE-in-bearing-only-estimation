@@ -54,7 +54,6 @@ def plot_trajectories(model):
     from matplotlib.animation import FuncAnimation
     import pandas as pd
 
-    # a sample dataframe  with coordinates of random movement
     x = model.observer_data[0][::8]
     y = model.observer_data[1][::8]
     df = pd.DataFrame({"x": x, "y": y})
@@ -67,18 +66,14 @@ def plot_trajectories(model):
     (ln,) = plt.plot([], [], "b--", alpha=0.5)
 
     def update(i):
-        """
-        updates the plot for each animation frame
-        """
         ln.set_data(df.iloc[0:i, 0], df.iloc[0:i, 1])
         return (ln,)
 
-    # animate the plot
     ani = FuncAnimation(
         fig,
         update,
         frames=len(df),
-        interval=100,  # delay of each frame in miliseconds
+        interval=100,
         blit=True,
     )
     ani.save('trajectory.gif')
@@ -100,7 +95,7 @@ def plot_bearings(model, result):
 
     ci = np.degrees(model.noise_std)
     ax = plt.gca()
-    # ax.fill_between(x, (y - ci), (y + ci), color="b", alpha=0.1)
+    ax.fill_between(x, (y - ci), (y + ci), color="b", alpha=0.1)
     ax.set_xlabel("Время, с")
     ax.set_ylabel("Пеленг, °")
     ax.legend(["Истинный пеленг", "Расчетный пеленг"])
