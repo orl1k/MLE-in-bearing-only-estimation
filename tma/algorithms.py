@@ -1,7 +1,6 @@
 import numpy as np
 import tma.functions as f
 from tma.lm import lev_mar
-from scipy.optimize import curve_fit
 import time
 
 
@@ -46,7 +45,10 @@ def n_bearings_algorithm(model, p0):
 
 
 def mle_algorithm_v1(model, p0):
-    algorithm_name = "ММП scipy"
+
+    from scipy.optimize import curve_fit
+
+    algorithm_name = "ММП2"
 
     def fun(data, b, d, c, v):
         return f.xy_func(data, [b, d, c, v])
@@ -56,6 +58,7 @@ def mle_algorithm_v1(model, p0):
         fun, model.observer_data, model.bearings_with_noise, p0=p0, full_output=True
     )
     stop_time = time.perf_counter()
+
     score = res[2]["nfev"]
     if (np.diag(res[1]) < 0).any():
         perr = np.empty(4)
@@ -64,18 +67,20 @@ def mle_algorithm_v1(model, p0):
         perr = np.sqrt(np.diag(res[1]))
 
     return get_result(
-            model,
-            algorithm_name,
-            res[0].copy(),
-            perr,
-            [score, np.nan],
-            p0,
-            stop_time - start_time,
-        )
+        model,
+        algorithm_name,
+        res[0].copy(),
+        perr,
+        [score, np.nan],
+        p0,
+        stop_time - start_time,
+    )
 
 
 def mle_algorithm_v2(model, p0, verbose=False, full_output=True):
+
     algorithm_name = "ММП"
+
     start_time = time.perf_counter()
     res = lev_mar(
         f.xy_func,
@@ -84,9 +89,10 @@ def mle_algorithm_v2(model, p0, verbose=False, full_output=True):
         p0,
         verbose=verbose,
         jac=f.xy_func_jac,
-        std=model.noise_std
+        std=model.noise_std,
     )
     stop_time = time.perf_counter()
+
     if (np.diag(res[1]) < 0).any():
         perr = np.empty(4)
         perr[:] = np.nan
@@ -107,7 +113,7 @@ def mle_algorithm_v2(model, p0, verbose=False, full_output=True):
 
 
 def dynamic_mle(model, p0):
-    algorithm_name = "ММП в реальном времени"
+    algorithm_name = "ДММП"
     t = [420, 660, 1200]
     res_arr = []
     lam = 1e-2
@@ -174,13 +180,14 @@ def swarm(
         target_func = f.get_random_p0
 
     alg_dict = {
+        "ММП2": mle_algorithm_v1,
         "ММП": mle_algorithm_v2,
         "Метод N пеленгов": n_bearings_algorithm,
-        "ММП в реальном времени": dynamic_mle,
+        "ДММП": dynamic_mle,
     }
     algorithm = alg_dict[algorithm_name]
     if fixed_p0:
-        if algorithm_name in ["ММП", "ММП в реальном времени", "ММП scipy"]:
+        if algorithm_name in ["ММП", "ДММП", "ММП", "ММП2"]:
             p0[0] = f.to_angle(np.radians(p0[0]))
             p0[2] = f.to_angle(np.radians(p0[2]))
             b, d, c, v = p0
@@ -203,7 +210,7 @@ def swarm(
                 p0 = p0_func(seed=i)
             else:
                 p0 = p0_func()
-            if algorithm_name in ["ММП", "ММП в реальном времени", "ММП scipy"]:
+            if algorithm_name in ["ММП", "ДММП", "ММП", "ММП2"]:
                 p0[0] = f.to_angle(np.radians(p0[0]))
                 p0[2] = f.to_angle(np.radians(p0[2]))
                 b, d, c, v = p0
@@ -251,7 +258,7 @@ def get_result(model, algorithm_name, res, perr, nfev, p0, t):
     d_end_pred = np.sqrt(r_x_end ** 2 + r_y_end ** 2) / 1000.0
     res = f.convert_to_bdcv(res)
 
-    if algorithm_name in ["ММП", "ММП в реальном времени", "ММП scipy"]:
+    if algorithm_name in ["ММП", "ДММП", "ММП2"]:
         p0 = f.convert_to_bdcv(p0)
 
     model.last_result = res

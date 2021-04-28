@@ -4,13 +4,13 @@ import numpy as np
 
 def bd_func(data, params):
 
-    bearing, distance, course, velocity = params
+    b, d, c, v = params
     n = len(data[0])
-    x_velocity = velocity * np.cos(course)
-    y_velocity = velocity * np.sin(course)
-    num = 1000 * distance * np.sin(bearing) + y_velocity * np.array(range(n)) - data[1]
-    den = 1000 * distance * np.cos(bearing) + x_velocity * np.array(range(n)) - data[0]
-    angle = np.arctan2(num, den)
+    vx = v * np.cos(c)
+    vy = v * np.sin(c)
+    r_y = 1000 * d * np.sin(b) + vy * np.array(range(n)) - data[1]
+    r_x = 1000 * d * np.cos(b) + vx * np.array(range(n)) - data[0]
+    angle = np.arctan2(r_y, r_x)
 
     return angle
 
@@ -40,12 +40,12 @@ def bd_func_jac(data, params):
 
 def xy_func(data, params):
 
-    x_origin, y_origin, x_velocity, y_velocity = params
-    r_y = 1000 * y_origin + y_velocity * data[2] - data[1]
-    r_x = 1000 * x_origin + x_velocity * data[2] - data[0]
-    angle = np.arctan2(r_y, r_x)
+    x, y, vx, vy = params
+    r_y = 1000 * y + vy * data[2] - data[1]
+    r_x = 1000 * x + vx * data[2] - data[0]
+    b = np.arctan2(r_y, r_x)
 
-    return angle
+    return b
 
 
 def xy_func_jac(data, params):
@@ -98,10 +98,10 @@ def to_angle(b):
 def convert_to_polar(coords):
 
     x, y = coords
-    distance = np.linalg.norm(coords, 2, axis=0)
-    angle = np.arctan2(y, x)
+    a = np.linalg.norm(coords, 2, axis=0)
+    b = np.arctan2(y, x)
 
-    return [angle, distance]
+    return [b, a]
 
 
 def convert_to_bdcv(params):
@@ -164,10 +164,12 @@ def get_df(res):
             "Iter",
         ]
     )
+
     for i, r in enumerate(res):
         r = r[algorithm_name]
         flat_list = [item for sublist in r.values() for item in sublist]
         df.loc[i] = flat_list
+    
     return df
 
 
