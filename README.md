@@ -12,8 +12,8 @@ Project structure:
 
 # Problem Statement:
 Find parameters of uniform and rectilinear object's motion given physical system, maneuvering observer  
-Object trajectory example:  
-![Target trajectory example](https://github.com/orl1k/mle-in-bearing-only-estimation/blob/main/trajectory_example.gif)  
+Common object trajectory example:  
+![Object trajectory example](https://github.com/orl1k/mle-in-bearing-only-estimation/blob/main/images/trajectory_example.gif)  
 
 Observer's data is formed of bearing (angle) measurements with normal distributed error  
 Example of real data vs noised data:  
