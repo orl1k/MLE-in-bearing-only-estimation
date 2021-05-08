@@ -2,10 +2,11 @@ import numpy as np
 import tma.functions as f
 from tma.lm import lev_mar
 import time
+from collections import namedtuple
 
 
 def n_bearings_algorithm(model, p0):
-    algorithm_name = "Метод N пеленгов"
+    algorithm_name = "N пеленгов"
 
     start_time = time.perf_counter()
     b0 = model.bearings_with_noise[0]
@@ -182,12 +183,12 @@ def swarm(
     alg_dict = {
         "ММП2": mle_algorithm_v1,
         "ММП": mle_algorithm_v2,
-        "Метод N пеленгов": n_bearings_algorithm,
+        "N пеленгов": n_bearings_algorithm,
         "ДММП": dynamic_mle,
     }
     algorithm = alg_dict[algorithm_name]
     if fixed_p0:
-        if algorithm_name in ["ММП", "ДММП", "ММП", "ММП2"]:
+        if algorithm_name in ["ММП", "ДММП", "ММП2", "N пеленгов"]:
             p0[0] = f.to_angle(np.radians(p0[0]))
             p0[2] = f.to_angle(np.radians(p0[2]))
             b, d, c, v = p0
@@ -239,7 +240,9 @@ def swarm(
 
 
 def get_result(model, algorithm_name, res, perr, nfev, p0, t):
+
     r = model.bearings_with_noise - f.xy_func(model.observer_data, res)  # residuals
+
     # chi_2 = sum((r) ** 2) / r.var(ddof=1)
     # r = (r + np.pi) % (2 * np.pi) - np.pi # normalization
     # if model.verbose:
@@ -256,9 +259,10 @@ def get_result(model, algorithm_name, res, perr, nfev, p0, t):
     r_x_end = model.observer_data[0][-1] - 1000.0 * res[0] - res[2] * model.end_t
     r_y_end = model.observer_data[1][-1] - 1000.0 * res[1] - res[3] * model.end_t
     d_end_pred = np.sqrt(r_x_end ** 2 + r_y_end ** 2) / 1000.0
+
     res = f.convert_to_bdcv(res)
 
-    if algorithm_name in ["ММП", "ДММП", "ММП2"]:
+    if algorithm_name in ["ММП", "ДММП", "ММП2", "N пеленгов"]:
         p0 = f.convert_to_bdcv(p0)
 
     model.last_result = res
@@ -276,30 +280,50 @@ def get_result(model, algorithm_name, res, perr, nfev, p0, t):
         [1 / 1, 1 / 0.1, 1 / 10, 1 / 0.1],
         [1 / 1, 1 / 0.15, 1 / 10, 1 / 0.1],
         [1 / 1, 1 / 0.15, 1 / 10, 1 / 0.15],
+        [1 / 1, 1 / 0.2, 1 / 15, 1 / 0.2],
     ]
 
     for d in D:
         delta = _get_delta(model, d, b_end_pred, d_end_pred)
         k_c.append(int(all(delta < [1, 1, 1, 1])))
 
-    result = {
-        algorithm_name: {
-            "Истинные параметры": model.true_params,
-            "Полученные параметры": res,
-            "Начальное приближение": p0,
-            "Текущие значения": [
-                np.degrees(f.to_bearing(model.bearings[-1])),
-                model.distances[-1],
-                b_end_pred,
-                d_end_pred,
-            ],
-            "СКО параметров": perr,
-            "Ка, Кб, Кс": [k_a, k_b, k_c],
-            "Время работы": [t],
-            "Число вычислений функции, число итераций": nfev,
-        }
-    }
-    return result
+    current_values = [
+        np.degrees(f.to_bearing(model.bearings[-1])),
+        model.distances[-1],
+        b_end_pred,
+        d_end_pred,
+    ]
+
+    result = namedtuple(
+        algorithm_name,
+        [
+            "true_params",
+            "result",
+            "initial_value",
+            "current_values",
+            "params_std",
+            "ka_kb_kc",
+            "time",
+            "nf_iter",
+        ],
+    )
+    return result(
+        model.true_params, res, p0, current_values, perr, [k_a, k_b, k_c], [t], nfev
+    )
+
+    # result = {
+    #     algorithm_name: {
+    #         "Истинные параметры": model.true_params,
+    #         "Полученные параметры": res,
+    #         "Начальное приближение": p0,
+    #         "Текущие значения": current_values,
+    #         "СКО параметров": perr,
+    #         "Ка, Кб, Кс": [k_a, k_b, k_c],
+    #         "Время работы": [t],
+    #         "Число вычислений функции, число итераций": nfev,
+    #     }
+    # }
+    # return result
 
 
 def _get_delta(model, d, b_end_pred, d_end_pred):

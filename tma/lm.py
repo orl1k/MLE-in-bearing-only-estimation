@@ -61,7 +61,7 @@ def lev_mar(
 
         while (not step) and (i < max_it):
             try:
-                A = H + lam * np.diag(np.diag(H))  # Fletcher modification
+                A = H + lam * np.diag(np.diag(H))  # Marquardt modification
                 # A = H + lam * np.eye(len(par)) # Standart LM
 
                 L, low = cho_factor(A)

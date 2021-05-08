@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from collections import namedtuple
 
 
 def bd_func(data, params):
@@ -128,49 +129,79 @@ def convert_to_xy(params):
     return np.array([x, y, vx, vy])
 
 
-def get_df(res):
-    try:
-        algorithm_name = list(res[0].keys())[0]
-    except AttributeError:
-        res = np.ravel(res)
-        algorithm_name = "ММП в реальном времени"
-    df = pd.DataFrame(
-        columns=[
-            "П0_ист",
-            "Д0_ист",
-            "К0_ист",
-            "V0_ист",
-            "П0_расч",
-            "Д0_расч",
-            "К0_расч",
-            "V0_расч",
-            "П0_апр",
-            "Д0_апр",
-            "К0_апр",
-            "V0_апр",
-            "Птек_ист",
-            "Дтек_ист",
-            "Птек_расч",
-            "Дтек_расч",
-            "СКО X",
-            "СКО Y",
-            "СКО VX",
-            "СКО VY",
-            "Ка",
-            "Кб",
-            "Успех",
+def get_df(result):
+
+    mapper = {
+        "b0": "П0_ист",
+        "d0": "Д0_ист",
+        "c0": "К0_ист",
+        "v0": "V0_ист",
+        "res_b0": "П0_расч",
+        "res_d0": "Д0_расч",
+        "res_c0": "К0_расч",
+        "res_v0": "V0_расч",
+        "init_b0": "П0_апр",
+        "init_d0": "Д0_апр",
+        "init_c0": "К0_апр",
+        "init_v0": "V0_апр",
+        "cur_b0": "Птек_ист",
+        "cur_d0": "Дтек_ист",
+        "cur_res_b0": "Птек_расч",
+        "cur_res_d0": "Дтек_расч",
+        "std_x": "СКО X",
+        "std_y": "СКО Y",
+        "std_vx": "СКО VX",
+        "std_vy": "СКО VY",
+        "ka": "Ка",
+        "kb": "Кб",
+        "kc": "Успех",
+        "t": "Время",
+        "nf": "Вычисления",
+        "iter": "Итерации",
+    }
+
+    if isinstance(result, list):
+        result_list = map(parser, result)
+    else:
+        result_list = map(parser, [result])
+
+    return pd.DataFrame(result_list).rename(columns=mapper)
+
+
+def parser(result):
+    parsed_res = namedtuple(
+        "res",
+        [
+            "b0",
+            "d0",
+            "c0",
+            "v0",
+            "res_b0",
+            "res_d0",
+            "res_c0",
+            "res_v0",
+            "init_b0",
+            "init_d0",
+            "init_c0",
+            "init_v0",
+            "cur_b0",
+            "cur_d0",
+            "cur_res_b0",
+            "cur_res_d0",
+            "std_x",
+            "std_y",
+            "std_vx",
+            "std_vy",
+            "ka",
+            "kb",
+            "kc",
             "t",
-            "Nf",
-            "Iter",
-        ]
+            "nf",
+            "iter",
+        ],
     )
 
-    for i, r in enumerate(res):
-        r = r[algorithm_name]
-        flat_list = [item for sublist in r.values() for item in sublist]
-        df.loc[i] = flat_list
-    
-    return df
+    return parsed_res(*(i for sublist in result for i in sublist))
 
 
 def df_to_docx(df, path):
